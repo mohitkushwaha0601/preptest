@@ -89,6 +89,52 @@
     });
   }
 
+  function initPractice() {
+    var notes = loadState(pageKey() + "_notes");
+    document.querySelectorAll("textarea[data-note]").forEach(function (field) {
+      var key = field.getAttribute("data-note");
+      field.value = notes[key] || "";
+      field.addEventListener("input", function () {
+        notes[key] = field.value;
+        saveState(pageKey() + "_notes", notes);
+      });
+    });
+
+    document.querySelectorAll("[data-timer]").forEach(function (timer) {
+      var duration = Number(timer.getAttribute("data-timer"));
+      var remaining = duration;
+      var interval = null;
+      var display = timer.querySelector(".timer-display");
+      var start = timer.querySelector("[data-start]");
+      var reset = timer.querySelector("[data-reset]");
+      function render() {
+        display.textContent = String(Math.floor(remaining / 60)).padStart(2, "0") + ":" + String(remaining % 60).padStart(2, "0");
+      }
+      render();
+      start.addEventListener("click", function () {
+        if (interval) return;
+        start.disabled = true;
+        interval = setInterval(function () {
+          remaining--;
+          render();
+          if (remaining <= 0) {
+            clearInterval(interval);
+            interval = null;
+            start.disabled = false;
+            display.textContent = "Time is up";
+          }
+        }, 1000);
+      });
+      reset.addEventListener("click", function () {
+        clearInterval(interval);
+        interval = null;
+        remaining = duration;
+        start.disabled = false;
+        render();
+      });
+    });
+  }
+
   // Reads the shared registry to build a dashboard overview (used on index.html)
   window.SSBPrep = {
     getRegistry: function () {
@@ -100,5 +146,6 @@
     initChecklists();
     initTabs();
     markActiveNav();
+    initPractice();
   });
 })();
